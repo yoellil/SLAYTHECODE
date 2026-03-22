@@ -1,0 +1,352 @@
+================================================================================
+                       HEROSCRIPT PROGRAMMING LANGUAGE
+                              Quick Reference
+                          Used in: CODE SPIRE
+================================================================================
+
+HeroScript is the custom programming language of CODE SPIRE.
+You write HeroScript code into the Code Snippet box during battle to activate
+your cards. Each statement compiles into a game effect: damage, block, healing,
+strength, a debuff, a loop, or a conditional.
+
+================================================================================
+                          KEYWORD TRANSLATIONS
+                          (HeroScript → Python)
+================================================================================
+
+┌─────────────────┬────────────────────────┬──────────────────────────────────┐
+│ HeroScript      │ Python Equivalent       │ Description                      │
+├─────────────────┼────────────────────────┼──────────────────────────────────┤
+│ bolt            │ int                     │ Integer / numeric variable type  │
+│ scroll          │ str                     │ String / text variable type      │
+│ flag            │ bool                    │ Boolean variable type            │
+│ char            │ str (1 char)            │ Single-character variable type   │
+├─────────────────┼────────────────────────┼──────────────────────────────────┤
+│ speak           │ print()                 │ Print a message (no game effect) │
+│ repeat          │ for / while             │ Loop N times or until condition  │
+│ until           │ while not (condition)   │ Condition that ends a repeat     │
+│ break           │ break                   │ Exit the current loop early      │
+│ end             │ (end of block)          │ Closes a repeat block            │
+│ test            │ if                      │ Conditional: runs TRUE branch    │
+│ fail            │ else                    │ The FALSE / else branch          │
+│ close           │ (end of if block)       │ Closes a test/fail block         │
+├─────────────────┼────────────────────────┼──────────────────────────────────┤
+│ ~               │ = (dice-roll assign)    │ Assign by rolling the die        │
+│ ~~              │ == (equality check)     │ Compare two values               │
+└─────────────────┴────────────────────────┴──────────────────────────────────┘
+
+NOTE: In HeroScript, ~ always rolls a random number from 1 up to the value
+you provide.  It is NOT a fixed assignment — it always rolls dice.
+
+================================================================================
+                              DATA TYPES
+================================================================================
+
+bolt  → integer (used for ALL numeric battle variables: dmg, def, heal, pow)
+scroll → string  (used for debuff names: "vulnerable", "poison", etc.)
+flag  → boolean  (true / false, used in conditions)
+char  → single character (rarely used in battle code)
+
+================================================================================
+                           BATTLE VARIABLES
+================================================================================
+
+Only these four variable names trigger combat effects.
+Using any other name with bolt does nothing to the battle.
+
+┌──────────────┬──────────────────────────────────────────────────────────────┐
+│ Variable     │ Effect                                                        │
+├──────────────┼──────────────────────────────────────────────────────────────┤
+│ dmg          │ Damage dealt to the enemy (+ your current Strength bonus)    │
+│ def          │ Block points gained this turn (absorbs incoming damage)      │
+│ heal         │ HP restored to your character                                │
+│ pow          │ Strength gained (permanent this battle; added to all damage) │
+└──────────────┴──────────────────────────────────────────────────────────────┘
+
+Debuff variable names (used with scroll, not bolt):
+  "vulnerable"  → enemy takes 50 % more damage while active
+  "weakened"    → enemy deals 25 % less damage while active
+  "poison"      → enemy takes damage each turn (equal to duration value)
+  "burn"        → enemy takes damage each turn (equal to half duration value)
+
+================================================================================
+                              DICE NOTATION
+================================================================================
+
+HeroScript uses three dice notations.  All use the ~ operator (roll dice).
+
+┌──────────────────────────┬────────────────────────────────────────────────┐
+│ HeroScript Syntax        │ What it does                                   │
+├──────────────────────────┼────────────────────────────────────────────────┤
+│ bolt dmg ~ N.            │ Roll 1 die with N sides  (1dN)                 │
+│                          │ Example: bolt dmg ~ 6.  → rolls 1–6           │
+├──────────────────────────┼────────────────────────────────────────────────┤
+│ bolt dmg ~ N * M.        │ Roll N dice with M sides  (NdM)                │
+│                          │ Example: bolt dmg ~ 3 * 4.  → roll 3d4        │
+│                          │ Max damage = N × M                             │
+├──────────────────────────┼────────────────────────────────────────────────┤
+│ bolt dmg ~ N + N + N.    │ One die per addend, each die has N sides       │
+│ (3 or more addends)      │ Example: bolt dmg ~ 2 + 2 + 2. → roll 3d2    │
+│                          │ Each term is its own die roll                  │
+├──────────────────────────┼────────────────────────────────────────────────┤
+│ bolt dmg ~ N + M.        │ Two-addend shorthand: N dice of M sides (NdM) │
+│ (exactly 2 addends)      │ Example: bolt dmg ~ 4 + 6.  → roll 4d6       │
+│                          │ Max damage = N × M                             │
+└──────────────────────────┴────────────────────────────────────────────────┘
+
+IMPORTANT — two-addend vs. three-addend:
+  bolt dmg ~ 4 + 4.          → 4d4  (N+M: 4 dice of 4 sides, max 16)
+  bolt dmg ~ 4 + 4 + 4.      → 3d4  (3 separate dice of 4 sides, max 12)
+  bolt dmg ~ 2 * 5.          → 2d5  (N*M: 2 dice of 5 sides, max 10)
+
+================================================================================
+                               OPERATORS
+================================================================================
+
+┌─────────────────┬────────┬────────────────────────────────────────────────┐
+│ HeroScript      │ Python │ Description                                     │
+├─────────────────┼────────┼────────────────────────────────────────────────┤
+│ +               │ +      │ Addition (or multi-die notation in bolt)        │
+│ -               │ -      │ Subtraction                                     │
+│ *               │ *      │ Multiplication (NdM dice notation in bolt)      │
+│ /               │ /      │ Division                                        │
+│ %               │ %      │ Modulo (remainder)                              │
+│ ==              │ ==     │ Equal to                                        │
+│ !=              │ !=     │ Not equal to                                    │
+│ >               │ >      │ Greater than                                    │
+│ <               │ <      │ Less than                                       │
+│ >=              │ >=     │ Greater than or equal                           │
+│ <=              │ <=     │ Less than or equal                              │
+│ and             │ and    │ Logical AND                                     │
+│ or              │ or     │ Logical OR                                      │
+│ not             │ not    │ Logical NOT                                     │
+└─────────────────┴────────┴────────────────────────────────────────────────┘
+
+================================================================================
+                             CONTROL FLOW
+================================================================================
+
+──────────────────────────────────────────────────────────────────────────────
+REPEAT LOOP  (count-based)
+──────────────────────────────────────────────────────────────────────────────
+Runs the body exactly N times.  BODY MUST BE INDENTED (4 spaces or 1 tab).
+Ends with the keyword:  end.
+
+  HeroScript:                     Python equivalent:
+  repeat 4:                       for i in range(4):
+      bolt dmg ~ 3.                   dmg = random.randint(1, 3)
+  end.                                deal_damage(dmg)
+
+The loop rolls the die each iteration, so damage accumulates.
+"repeat 4: bolt dmg ~ 3. end."  can deal 4–12 total damage.
+
+──────────────────────────────────────────────────────────────────────────────
+TEST / CONDITIONAL  (enemy debuff check)
+──────────────────────────────────────────────────────────────────────────────
+Checks whether the enemy currently has a debuff.
+TRUE branch runs if the enemy HAS the debuff.
+FALSE (fail) branch runs if the enemy does NOT have it.
+BODY MUST BE INDENTED.  Ends with:  close.
+
+  HeroScript:                     Meaning:
+  test enemy ~~ vulnerable:       if enemy has "vulnerable" debuff:
+      bolt dmg ~ 2 * 5.               roll 2d5 (max 10 damage)
+  fail:                           else:
+      bolt dmg ~ 5.                   roll 1d5 (max 5 damage)
+  close.
+
+Supported debuff names for test:  vulnerable | weakened | poison | burn
+
+──────────────────────────────────────────────────────────────────────────────
+DEBUFF APPLICATION  (scroll statement)
+──────────────────────────────────────────────────────────────────────────────
+Applies a status effect to the enemy for a rolled number of turns.
+
+  Syntax:
+  scroll debuff ~ "debuff_name" + N.
+
+  The + N part rolls 1dN to determine how many turns the debuff lasts.
+
+  HeroScript:                     Effect:
+  scroll debuff ~ "vulnerable" + 3.   Apply Vulnerable for 1d3 turns
+  scroll debuff ~ "poison" + 4.       Apply Poison for 1d4 turns
+  scroll debuff ~ "weakened" + 2.     Apply Weakened for 1d2 turns
+  scroll debuff ~ "burn" + 3.         Apply Burn for 1d3 turns
+
+  You can combine a bolt attack with a scroll debuff on the same card:
+  bolt dmg ~ 6.
+  scroll debuff ~ "poison" + 3.
+
+──────────────────────────────────────────────────────────────────────────────
+BREAK  (exit a loop early)
+──────────────────────────────────────────────────────────────────────────────
+  HeroScript:                     Python equivalent:
+  repeat 10:                      for i in range(10):
+      speak "Counting".               print("Counting")
+      break.                          break
+  end.
+
+================================================================================
+                           CARD TYPE RULES
+================================================================================
+
+Each card type ONLY accepts one matching HeroScript keyword.
+Using the wrong keyword causes a compile error — the card will NOT fire.
+
+┌────────────────┬──────────────────────────────────────────────────────────┐
+│ Card Type      │ Required HeroScript statement                             │
+├────────────────┼──────────────────────────────────────────────────────────┤
+│ attack         │ bolt dmg ~ <dice expression>.                             │
+│                │ May also include scroll debuff, repeat, or test blocks.  │
+├────────────────┼──────────────────────────────────────────────────────────┤
+│ defense        │ bolt def ~ <dice expression>.                             │
+│                │ Only bolt def is accepted — no dmg, heal, or pow.        │
+├────────────────┼──────────────────────────────────────────────────────────┤
+│ skill / heal   │ bolt heal ~ <dice expression>.                            │
+│                │ Only bolt heal is accepted.                               │
+├────────────────┼──────────────────────────────────────────────────────────┤
+│ power          │ bolt pow ~ <number>.                                      │
+│                │ Grants that many strength points permanently this battle. │
+├────────────────┼──────────────────────────────────────────────────────────┤
+│ attack+power   │ bolt dmg ~ <dice>.   AND   bolt pow ~ <number>.          │
+│                │ Both lines are required.                                  │
+└────────────────┴──────────────────────────────────────────────────────────┘
+
+================================================================================
+                             ENERGY COSTS
+================================================================================
+
+Attack cards cost energy based on their maximum possible damage output.
+Debuff cards get +3 added to their max-damage estimate per debuff applied.
+
+┌────────────┬─────────────┬───────────────────────────────────────────────┐
+│ Max Damage │ Energy Cost │ Example                                        │
+├────────────┼─────────────┼───────────────────────────────────────────────┤
+│ 1–4        │ 1E          │ bolt dmg ~ 4.          (1d4,  max 4)          │
+│ 5–8        │ 2E          │ bolt dmg ~ 6.          (1d6,  max 6)          │
+│ 9–14       │ 3E          │ bolt dmg ~ 10.         (1d10, max 10)         │
+│ 15–20      │ 4E          │ bolt dmg ~ 4 * 5.      (4d5,  max 20)        │
+│ 21–28      │ 5E          │ bolt dmg ~ 4 * 6.      (4d6,  max 24)        │
+│ 29–36      │ 6E          │ bolt dmg ~ 5 * 6.      (5d6,  max 30)        │
+│ 37–46      │ 7E          │ bolt dmg ~ 6 * 6.      (6d6,  max 36)        │
+│ 47+        │ 8E          │ bolt dmg ~ 8 * 6.      (8d6,  max 48)        │
+└────────────┴─────────────┴───────────────────────────────────────────────┘
+
+Defense, heal, and power cards are not subject to the above scaling.
+Their energy cost is set manually by the card designer.
+
+================================================================================
+                         COMPLETE CARD EXAMPLES
+================================================================================
+
+──────────────────────────────────────────────────────────────────────────────
+BASIC DAMAGE  (attack card)
+  bolt dmg ~ 6.
+  → Roll 1d6.  Deal that much damage + your Strength bonus.
+
+BASIC BLOCK  (defense card)
+  bolt def ~ 8.
+  → Roll 1d8.  Gain that much block this turn.
+
+BASIC HEAL  (skill card)
+  bolt heal ~ 10.
+  → Roll 1d10.  Restore that much HP.
+
+BASIC STRENGTH  (power card)
+  bolt pow ~ 2.
+  → Permanently gain 2 Strength for this battle.
+
+──────────────────────────────────────────────────────────────────────────────
+NdM MULTI-DICE ATTACK  (N * M notation)
+  bolt dmg ~ 3 * 4.
+  → Roll 3d4.  Total range: 3–12.  Max damage = 12.
+
+──────────────────────────────────────────────────────────────────────────────
+MULTI-ADDEND ATTACK  (3+ terms, one die each)
+  bolt dmg ~ 2 + 2 + 2.
+  → Roll three separate d2s and add them.  Range: 3–6.
+
+──────────────────────────────────────────────────────────────────────────────
+TWO-ADDEND ATTACK  (N+M = NdM)
+  bolt dmg ~ 4 + 6.
+  → Roll 4d6.  Range: 4–24.  Max damage = 24.
+
+──────────────────────────────────────────────────────────────────────────────
+BARRAGE LOOP  (attack card)
+  repeat 4:
+      bolt dmg ~ 3.
+  end.
+  → Hit 4 times, each roll is 1d3.  Total range: 4–12.
+  NOTE: The bolt dmg line must be indented inside the loop.
+
+──────────────────────────────────────────────────────────────────────────────
+DEBUFF ATTACK  (attack card)
+  bolt dmg ~ 4.
+  scroll debuff ~ "vulnerable" + 2.
+  → Deal 1d4 damage AND apply Vulnerable for 1d2 turns.
+  While Vulnerable, the enemy takes 50 % more damage from all hits.
+
+──────────────────────────────────────────────────────────────────────────────
+LOOP + DEBUFF  (attack card)
+  repeat 3:
+      bolt dmg ~ 3.
+  end.
+  scroll debuff ~ "poison" + 3.
+  → Hit 3 times for 1d3 each, then apply Poison for 1d3 turns.
+
+──────────────────────────────────────────────────────────────────────────────
+CONDITIONAL ATTACK  (attack card)
+  test enemy ~~ vulnerable:
+      bolt dmg ~ 2 * 5.
+  fail:
+      bolt dmg ~ 5.
+  close.
+  → If enemy is Vulnerable: roll 2d5 (max 10).
+    Otherwise:              roll 1d5 (max 5).
+  NOTE: Both branches must be indented.  Ends with close.
+
+──────────────────────────────────────────────────────────────────────────────
+ATTACK + POWER  (attack_power card)
+  bolt dmg ~ 6.
+  bolt pow ~ 2.
+  → Deal 1d6 damage AND gain 2 Strength permanently this battle.
+  Both bolt dmg and bolt pow lines are required for attack_power cards.
+
+================================================================================
+                         COMMON MISTAKES
+================================================================================
+
+  ✗  bolt dmg ~ 0.           → Value must be at least 1
+  ✗  bolt def ~ 6             → Missing period at end of statement
+  ✗  bolt xyz ~ 6.            → "xyz" is not a battle variable (use dmg/def/heal/pow)
+  ✗  bolt def ~ 6.            → Wrong type on an ATTACK card (must use dmg)
+  ✗  bolt dmg ~~ 6.           → ~~ is equality check, not a roll (use ~ not ~~)
+  ✗  repeat 4:                → Body NOT indented — the engine will reject this
+     bolt dmg ~ 3.
+     end.
+  ✗  test enemy ~~ burning:   → "burning" is not a valid debuff name
+                                 Valid: vulnerable | weakened | poison | burn
+
+================================================================================
+                            QUICK REFERENCE
+================================================================================
+
+   HeroScript                         Python equivalent
+═══════════════════════════════════════════════════════════════════════════════
+ bolt dmg ~ 6.          →   dmg = random.randint(1, 6);  deal_damage(dmg)
+ bolt def ~ 8.          →   blk = random.randint(1, 8);  gain_block(blk)
+ bolt heal ~ 10.        →   hp  = random.randint(1,10);  heal_player(hp)
+ bolt pow ~ 2.          →   gain_strength(2)
+ bolt dmg ~ 3 * 4.      →   dmg = sum(randint(1,4) for _ in range(3))
+ bolt dmg ~ 2 + 2 + 2.  →   dmg = randint(1,2)+randint(1,2)+randint(1,2)
+ scroll debuff ~ "x"+N. →   apply_debuff("x", randint(1, N))
+ repeat K:              →   for _ in range(K):
+     ...                →       ...
+ end.                   →   (end of loop)
+ test enemy ~~ x:       →   if enemy_has_debuff("x"):
+     ...                →       ...
+ fail:                  →   else:
+     ...                →       ...
+ close.                 →   (end of conditional)
+
+================================================================================
